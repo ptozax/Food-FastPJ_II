@@ -12,7 +12,7 @@ var firebaseConfig = {
    firebase.initializeApp(firebaseConfig);
   var db = firebase.firestore();
 
-
+///
   var provider = new firebase.auth.GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
 
@@ -199,9 +199,14 @@ $("#itemlist").empty();
   // Sign-out successful.
       });
   
-  
-  
   });
+
+  $("#address_btn").click(function () {
+    document.querySelector('#myNavigator').pushPage('address.html', {data: {title: 'Page 2'}});
+    $("#sidemenu")[0].close();
+  });
+
+
 
 
 
@@ -561,6 +566,102 @@ if (page.id === 'search') {
   }
 
 
+
+  //////////////////////////////////////address////////////////////////////////
+
+
+
+
+
+if (page.id === "address") {
+  page.querySelector('ons-toolbar .center').innerHTML = 'Address';
+
+  var latitude, selectedLatitude;
+  var longitude, selectedLongitude;
+
+  var onSuccess = function (position) {
+    latitude = position.coords.latitude;
+    longitude = position.coords.longitude;
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoicHRvemF4IiwiYSI6ImNrMmxhY2hiaDA1MGozbnFzaXFkcG1jYTgifQ.5IHasePqWTnXpq_ytHYK5A';
+    var map = new mapboxgl.Map({
+      container: 'map', // container id
+      style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
+      center: [longitude, latitude], // starting position [lng, lat]
+      zoom: 14 // starting zoom
+    });
+
+    // selectedLatitude = latitude;
+    // selectedLongitude = longitude;
+
+    var marker = new mapboxgl.Marker({
+      draggable: true
+    })
+      .setLngLat([longitude, latitude])
+      .addTo(map);
+    onDragEnd();
+    function onDragEnd() {
+      var lngLat = marker.getLngLat();
+      selectedLatitude = lngLat.lat;
+      selectedLongitude = lngLat.lng;
+
+      coordinates.style.display = 'block';
+      coordinates.innerHTML = 'Longitude: ' + lngLat.lng + '<br />Latitude: ' + lngLat.lat;
+    }
+
+    marker.on('dragend', onDragEnd);
+  };
+
+  // onError Callback receives a PositionError object
+  //
+  function onError(error) {
+    alert('code: ' + error.code + '\n' +
+      'message: ' + error.message + '\n');
+  }
+
+  navigator.geolocation.getCurrentPosition(onSuccess, onError);
+
+  $("#setAddress").click(function () {
+    console.log("Latitude is " + selectedLatitude + " Longitude is " + selectedLongitude);
+    $("#content")[0].load("completeOrder.html");
+    // ons.notification.alert();
+  });
+
+  $("#backbtn").click(function () {
+    $("#content")[0].load("foodCategory.html");
+  });
+}
+
+if (page.id === "completeOrderPage") {
+
+  ons.notification.alert("ありがとう");
+  db.collection("restaurant").get().then((querySnapshot) => {
+    querySnapshot.forEach((doc) => {
+      if (doc.data().Ref === selectedRef) {
+        var orderRes = `<img src="${doc.data().pic}" style="width: 20%">
+        <br><b>${doc.data().name}</b><br>`;
+        $('#orderRes').append(orderRes);
+      }
+    });
+  });
+
+  for (var i = 0; i < getitem.length; i++) {
+    var show_OrderMenu = `
+    <ons-col width=20%>&emsp;` + (1) + `</ons-col>
+    <ons-col width=50%>- `+ getitem[i] + `</ons-col>&emsp;&emsp; 
+    <ons-col width=20%>`+ getprice[i] + `</ons-col>`;
+
+    $("#orderMenu").append(show_OrderMenu);
+  }
+
+  $("#show_delivery").append("Delivery is " + getdelivery + " ฿");
+  var show_total = "Total: " + (prices + getdelivery) + " ฿";
+  $("#show_total").append(show_total);
+
+  $("#closebtn").click(function(){
+    $("#content")[0].load("foodCategory.html");
+  });
+}
 
 
 
